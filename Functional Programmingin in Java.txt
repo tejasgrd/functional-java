@@ -1,0 +1,188 @@
+Functional Programmingin in Java 
+
+Ch 1 :
+Functional programming is sometimes considered to be a set of techniques that
+supplement or replace techniques found in other programming paradigms, such as
+ First-class functions
+ Anonymous functions
+ Closures
+ Currying
+ Lazy evaluation
+ Parametric polymorphism
+ Algebraic data types
+
+
+One major difference between imperative programming and FP is that in FP there are
+no side effects. This means, among other things,
+ No mutation of variables
+ No printing to the console or to any device
+ No writing to files, databases, networks, or whatever
+ No exception throwing
+
+
+Pure function see Ex:1.1
+
+
+1.3 How referential transparency makes programs safer
+
+Having no side effects (and thus not mutating anything in the external world) isn’t
+enough for a program to be functional. Functional programs must also not be
+affected by the external world. In other words, the output of a functional program
+must depend only on its argument. This means functional code may not read data
+from the console, a file, a remote URL, a database, or even from the system. Code that
+doesn’t mutate or depend on the external world is said to be referentially transparent
+
+Referentially transparent code has several properties that might be of some interest
+to programmers:
+ It’s self-contained. It doesn’t depend on any external device to work. You can
+use it in any context—all you have to do is provide a valid argument.
+ It’s deterministic, which means it will always return the same value for the same
+argument. With referentially transparent code, you won’t be surprised. It might
+return a wrong result, but at least, for the same argument, this result will never
+change.
+ It will never throw any kind of Exception. It might throw errors, such as OOME
+(out-of-memory error) or SOE (stack-overflow error), but these errors mean
+that the code has a bug, which is not a situation you, as a programmer, or the
+users of your API, are supposed to handle (besides crashing the application and
+eventually fixing the bug).
+ It won’t create conditions causing other code to unexpectedly fail. For example,
+it won’t mutate arguments or some other external data, causing the caller
+to find itself with stale data or concurrent access exceptions.
+ It won’t hang because some external device (whether database, file system, or
+network) is unavailable, too slow, or simply broken.
+
+
+1.5 Using the substitution model to reason about programs
+
+3 x 2 + 4 x 5 = 26 ,  can be replaced by 
+6     + 4 x 5 = 26 , can be replaced by 
+6     + 20    = 26
+
+
+See : Ex:1.5 (class Ch1)
+Replacing mult(2, 3) and mult(4, 5) with their respective return values doesn’t
+change the signification of the program:
+int x = add(6, 20);
+
+In contrast, replacing the call to the add function with its return value changes the signification
+of the program, because the log method will no longer be called, and no
+logging will happen. This might be important or not; in any case, it changes the result
+of the program
+
+
+1.6 Applying functional principles to a simple example (class DonutShop)
+
+public class DonutShop {
+	public static Donut buyDonut(CreditCard creditCard) {
+		Donut donut = new Donut();
+		creditCard.charge(Donut.price); // B
+		return donut; //C
+	}
+}
+
+In this code, the charging of the credit card is a side effect B. Charging a credit card
+probably consists of calling the bank, verifying that the credit card is valid and authorized,
+and registering the transaction. The function returns the donut C.
+
+public class Payment {
+	public final CreditCard creditCard;
+	public final int amount;
+	public Payment(CreditCard creditCard, int amount) {
+		this.creditCard = creditCard;
+		this.amount = amount;
+	}
+}
+This class contains the necessary data to represent the payment, which consists of a
+credit card and the amount to charge. Because the buyDonut method must return both
+a Donut and a Payment, you could create a specific class for this, such as Purchase:
+
+public class Purchase {
+public Donut donut;
+public Payment payment;
+	public Purchase(Donut donut, Payment payment) {
+		this.donut = donut;
+		this.payment = payment;
+	}
+}
+
+Rather than creating a specific Purchase class, you’ll use a generic one that you’ll
+call Tuple. This class will be parameterized by the two types it will contain (Donut and
+Payment). The following listing shows its implementation, as well as the way it’s used in
+the DonutShop class.
+
+public class Tuple<T, U> {
+public final T _1;
+public final U _2;
+public Tuple(T t, U u) {
+this._1 = t;
+this._2 = u;
+}
+}
+public class DonutShop {
+	public static Tuple<Donut, Payment> buyDonut(CreditCard creditCard) {
+		Donut donut = new Donut();
+		Payment payment = new Payment(creditCard, Donut.price);
+		return new Tuple<>(donut, payment);
+	}
+}
+
+The combine method in the following listing allows you to combine payments.
+Note that if the credit cards don’t match, an exception is thrown. This doesn’t contradict
+what I said about functional programs not throwing exceptions. Here, trying to
+combine two payments with two different credit cards is considered a bug, so it should
+crash the application.
+
+
+public class Payment {
+	public final CreditCard creditCard;
+	public final int amount;
+	public Payment(CreditCard creditCard, int amount) {
+		this.creditCard = creditCard;
+		this.amount = amount;
+	}
+	public Payment combine(Payment payment) {
+		if (creditCard.equals(payment.creditCard)) {
+			return new Payment(creditCard, amount + payment.amount);
+		} else {
+			throw new IllegalStateException("Cards don't match.");
+		}
+	}
+}
+
+
+Of course, the combine method wouldn’t be very efficient for buying several donuts at
+once. For this use case, you could simply replace the buyDonut method with buy-
+Donuts(int n, CreditCard creditCard), as shown in the following listing. This
+method returns a Tuple<List<Donut>, Payment>.
+
+import static com.fpinjava.common.List.fill;
+import com.fpinjava.common.List;
+import com.fpinjava.common.Tuple;
+public class DonutShop {
+	public static Tuple<Donut, Payment> buyDonut(final CreditCard cCard) {
+		return new Tuple<>(new Donut(), new Payment(cCard, Donut.price));
+	}
+	public static Tuple<List<Donut>, Payment> buyDonuts(final int quantity,
+		final CreditCard cCard) {
+			return new Tuple<>(fill(quantity, () -> new Donut()),
+				new Payment(cCard, Donut.price * quantity));
+	}
+}
+
+This combine method is somewhat equivalent to the following,
+which uses the standard Java list:
+
+public static Tuple<List<Donut>, Payment> buyDonuts(final int quantity,
+final CreditCard cCard) {
+	return new Tuple<>(Collections.nCopies(quantity, new Donut()),
+		new Payment(cCard, Donut.price * quantity));
+}
+
+As you’ll soon need additional functional methods, you won’t be using the Java list.
+For the time being, you just need to know that the static List<A> fill(int n,
+Supplier<A> s) method creates a list of n instances of A by using a special object,
+Supplier<A>. As its name indicates, a Supplier<A> is an object that supplies an A
+when its get() method is called. Using a Supplier<A> instead of an A allows for lazy
+evaluation, which you’ll learn about in the next chapters. For now, you may think of it
+as a way to manipulate an A without effectively creating it until it’s needed.
+
