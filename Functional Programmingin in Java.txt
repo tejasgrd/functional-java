@@ -186,3 +186,54 @@ when its get() method is called. Using a Supplier<A> instead of an A allows for 
 evaluation, which you’ll learn about in the next chapters. For now, you may think of it
 as a way to manipulate an A without effectively creating it until it’s needed.
 
+
+Example Complete Program Class -> DonutShop.java
+
+Few Methods to Implement 
+
+1. public <B> Map<B, List<A>> groupBy(Function<A, B> f) (List class )
+
+2. List<A> values() (Map class )
+
+3. <B> List<B> map(Function<A, B> f) (List class )
+
+4. Tuple<List<A1>, List<A2>> unzip(Function<A, Tuple<A1, A2>> f) (List class)
+
+5. A reduce(Function<A, Function<A, A>> f)  (List class)
+
+ALl thse implemented in public static List<Payment> groupByCard(List<Payment> payments) 
+
+public static List<Payment> groupByCard(List<Payment> payments) {
+	return payments
+	.groupBy(x -> x.creditCard)
+	.values()
+	.map(x -> x.reduce(c1 -> c2 -> c1.combine(c2)));
+}
+
+the most important notion here is abstraction. Look at the reduce method. It
+takes as its argument an operation, and uses it to reduce a list to a single value. Here,
+the operation has two operands of the same type. Except for this, it could be any operation.
+Consider a list of integers.
+
+
+
+Chapter 2 : Using functions in Java
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

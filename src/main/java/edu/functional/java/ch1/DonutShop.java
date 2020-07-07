@@ -58,6 +58,23 @@ class Payment {
       throw new IllegalStateException("Cards don't match.");
     }
   }
+
+ /* public static List<Payment> groupByCard(List<Payment> payments) {
+    return payments
+        .groupBy(x -> x.creditCard) //Changes a List<Payment> into a
+                                   //   Map<CreditCard, List<Payment>>
+                                     // where each list contains all payments
+                                   // for a particular credit card
+        .values() //Changes the Map<CreditCard,
+                  // List<Payment>> into a
+                  //List<List<Payment>>
+        .map(x -> x.reduce(c1 -> c2 -> c1.combine(c2)));//Reduces each List<Payment> into a
+single Payment, leading to the overall
+result of a List<Payment>
+
+
+    }*/
+
 }
 
 class CreditCard {
